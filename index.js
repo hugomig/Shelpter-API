@@ -1,5 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server,{
+    cors: {
+      origin: '*',
+    }
+});
 
 const bcrypt = require('bcrypt');
 const numberOfRounds = 10;
@@ -19,6 +26,8 @@ MongoClient.connect(url, (err,client) => {
 });
 
 app.use(express.json());
+app.use(cors());
+
 
 
 /* USER */
@@ -207,7 +216,43 @@ app.delete('/protect/:login_protecteur/:login_protege', async (req,res) => {
 });
 
 
+/* SOKECT IO */
 
-app.listen(8080, () => {
-    console.log('listening');
+let i = 1;
+
+io.on('connection', (socket) => {
+    console.log('new connection');
+    console.log(socket.id);
+    console.log('username : '+i);
+    socket.username = i;
+    i++;
+
+    socket.emit('welcome','Hello');
+
+    socket.on('disconnect', () => {
+        console.log('disconnected '+socket.id);
+    });
+
+    socket.on('teste', ()=>{
+        console.log('teste');
+    });
+
+    socket.on('watchPosition',(longitude, latitude)=>{
+        console.log('watch - '+socket.id+' : '+socket.username+' - '+longitude+' '+latitude)
+        io.emit('getPosition',socket.username,longitude,latitude);
+    });
+});
+
+
+
+
+
+/*     LISTENING      */
+
+/*app.listen(8080, () => {
+    console.log('listening 8080');
+});*/
+
+server.listen(3000, () => {
+    console.log('listening 3000')
 });
