@@ -12,13 +12,13 @@ const bcrypt = require('bcrypt');
 const numberOfRounds = 10;
 
 const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017';
+const url = 'mongodb://mongo:27017';
 const dbName = 'SHELPTER';
 let db;
 let user;
 let protect;
 
-MongoClient.connect(url, (err,client) => {
+MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     console.log('connected to the db');
     db = client.db(dbName);
     user = db.collection('user');
@@ -93,7 +93,7 @@ app.get('/users/login/:login/:mdp', async (req,res) => {
             res.send(match);
         }
         else{
-            res.send(false);
+            res.send(false)
         }
     }
     catch(err){
@@ -233,13 +233,13 @@ io.on('connection', (socket) => {
         console.log('disconnected '+socket.id);
     });
 
-    socket.on('teste', ()=>{
-        console.log('teste');
-    });
-
     socket.on('watchPosition',(longitude, latitude)=>{
         console.log('watch - '+socket.id+' : '+socket.username+' - '+longitude+' '+latitude)
         io.emit('getPosition',socket.username,longitude,latitude);
+    });
+
+    socket.on('sendPos',(latitude,longitude)=>{
+        socket.broadcast.emit('receivePos',socket.id,latitude,longitude);
     });
 });
 
