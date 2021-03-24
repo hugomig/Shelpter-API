@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server,{
@@ -223,11 +224,16 @@ let i = 1;
 io.on('connection', (socket) => {
     console.log('new connection');
     console.log(socket.id);
-    console.log('username : '+i);
-    socket.username = i;
+    console.log('socket : '+i);
+    socket.count = i;
     i++;
 
     socket.emit('welcome','Hello');
+
+    socket.on('login', (login) => {
+        console.log(login+' logged');
+        socket.login = login;
+    });
 
     socket.on('disconnect', () => {
         console.log('disconnected '+socket.id);
@@ -239,7 +245,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('sendPos',(latitude,longitude)=>{
-        socket.broadcast.emit('receivePos',socket.id,latitude,longitude);
+        console.log(socket.id+' : '+latitude+' '+longitude);
+        socket.broadcast.emit('receivePos',socket.count,socket.login,latitude,longitude);
     });
 });
 
