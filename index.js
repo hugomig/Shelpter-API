@@ -18,12 +18,14 @@ const dbName = 'SHELPTER';
 let db;
 let user;
 let protect;
+let alerts;
 
 MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     console.log('connected to the db');
     db = client.db(dbName);
     user = db.collection('user');
     protect = db.collection('protect');
+    alerts = db.collection('alerts');
 });
 
 app.use(express.json());
@@ -216,6 +218,46 @@ app.delete('/protect/:login_protecteur/:login_protege', async (req,res) => {
     }
 });
 
+app.get('/alerts', async (req,res) => {
+    try{
+        const rep = await alerts.find().toArray();
+        res.status(200).json(rep);
+    }
+    catch(err){
+        throw err;
+    }
+});
+
+//lorque un utilisateur declenche une alerte
+app.post('/alerts', async (req,res) => {
+    try{
+        const user = req.body.user;
+        const message = req.body.message;
+        const lat = req.body.lat;
+        const long = req.body.long;
+        const status = 1;
+        const date = Date.now();
+
+        await alerts.insertOne({user: user, message: message, lat: lat, long: long, status: status, date: date});
+        const response = alerts.find({login: user, date: date}).toArray();
+        res.status(200).json(response);
+    }
+    catch(err){
+        throw err;
+    }
+});
+
+/*app.delete('/alerts',async (req,res)=>{
+    try{
+        alerts.remove({});
+        const doc = alerts.find().toArray();
+        res.status(200).json(doc);
+    }
+    catch(err){
+        throw err;
+    }
+});*/
+
 
 /* SOKECT IO */
 
@@ -241,7 +283,7 @@ io.on('connection', (socket) => {
 
     socket.on('watchPosition',(longitude, latitude)=>{
         console.log('watch - '+socket.id+' : '+socket.username+' - '+longitude+' '+latitude)
-        io.emit('getPosition',socket.username,longitude,latitude);
+        io.emit('getPosition',socket.login,longitude,latitude);
     });
 
     socket.on('sendPos',(latitude,longitude)=>{
