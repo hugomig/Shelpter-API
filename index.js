@@ -13,14 +13,14 @@ const bcrypt = require('bcrypt');
 const numberOfRounds = 10;
 
 const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://mongo:27017';
+const url = 'mongodb://localhost:27017';
 const dbName = 'SHELPTER';
 let db;
 let user;
 let protect;
 let alerts;
 
-MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
+const clientConnection = MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     console.log('connected to the db');
     db = client.db(dbName);
     user = db.collection('user');
@@ -116,7 +116,19 @@ app.post('/users', async (req,res) => {
 
         const hash = await bcrypt.hashSync(mdp, numberOfRounds);
 
-        await user.insertOne({login:login,mdp:hash,nom:nom,prenom:prenom,mail:mail});
+        const fileId = req.body.fileId;
+        const filePhoto = req.body.filePhoto;
+
+        await user.insertOne({
+            login: login,
+            mdp: hash,
+            nom: nom,
+            prenom: prenom,
+            mail: mail,
+            fileId: fileId,
+            filePhoto: filePhoto,
+            valid: false
+        });
         const doc = await user.find({login:login}).toArray();
         res.status(200).json(doc);
     }
@@ -259,7 +271,37 @@ app.post('/alerts', async (req,res) => {
 });*/
 
 
-/* SOKECT IO */
+
+/* FILES */
+
+const multer = require('multer');
+const GridFsStorage = require('multer-gridfs-storage');
+const storage = new GridFsStorage({
+    url: url+'/'+dbName
+})
+const upload = multer({ storage })
+
+
+app.post('/files/id', upload.single('id'),async (req,res) => {
+    res.status(200).send(req.file.id)
+});
+
+app.post('/files/photo', upload.single('photo'),async (req,res) => {
+    res.status(200).send(req.file.id)
+});
+
+app.get('/files', async (req,res) => {
+    res.status(200)
+});
+
+
+
+
+/*   -----------------
+
+        SOKECT IO
+
+     -----------------     */
 
 let i = 1;
 
