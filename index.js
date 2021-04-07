@@ -13,7 +13,7 @@ const bcrypt = require('bcrypt');
 const numberOfRounds = 10;
 
 const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017';
+const url = 'mongodb://mongo:27017';
 const dbName = 'SHELPTER';
 let db;
 let user;
