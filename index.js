@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server,{
@@ -12,20 +11,27 @@ const io = require('socket.io')(server,{
 const bcrypt = require('bcrypt');
 const numberOfRounds = 10;
 
-const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://mongo:27017';
+const mongo = require('mongodb');
+const ObjectId = mongo.ObjectID;
+const MongoClient = mongo.MongoClient;
+const url = 'mongodb://localhost:27017';
 const dbName = 'SHELPTER';
 let db;
 let user;
 let protect;
 let alerts;
 
-const clientConnection = MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
+const Grid = require('gridfs-stream');
+let gfs;
+
+MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     console.log('connected to the db');
     db = client.db(dbName);
     user = db.collection('user');
     protect = db.collection('protect');
     alerts = db.collection('alerts');
+
+    gfs = Grid(db,mongo);
 });
 
 app.use(express.json());
@@ -290,10 +296,35 @@ app.post('/files/photo', upload.single('photo'),async (req,res) => {
     res.status(200).send(req.file.id)
 });
 
-app.get('/files', async (req,res) => {
-    res.status(200)
+app.get('/files/:id', async (req,res) => {
+    var id;
+    try{
+        id = ObjectId(req.params.id)
+    }
+    catch(err){
+        res.status(200).send("bad id");
+    }
+    const exist = await db.collection('fs.files').find({_id: id}).toArray();
+    if(exist.length === 1){
+        const readStream = gfs.createReadStream({
+            _id: req.params.id
+        });
+        readStream.pipe(res);
+    }
+    else{
+        res.status(200).send("this file doesnt exist");
+    }
 });
 
+app.patch('/users/valid/:login', async (req,res) => {
+    const login = req.params.login;
+    const valid = req.body.valid;
+
+    await user.updateOne({login:login}, {$set:{valid:valid}});
+
+    doc = await user.find({login:login}).toArray();
+    res.status(200).json(doc);
+})
 
 
 
