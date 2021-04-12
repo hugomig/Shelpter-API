@@ -296,6 +296,18 @@ app.post('/files/photo', upload.single('photo'),async (req,res) => {
     res.status(200).send(req.file.id)
 });
 
+app.post('/files/profile_photo', upload.single('profile_photo'), async (req,res) => {
+    res.status(200).send(req.file.id)
+})
+
+app.patch('/users/:login/photo', async (req,res) => {
+    const login = req.params.login;
+    const photoId = req.body.photoId;
+
+    await user.updateOne({login:login}, {$set:{profile_photo: photoId}});
+    res.status(200).send(await user.find({login:login}).toArray());
+})
+
 app.get('/files/:id', async (req,res) => {
     var id;
     try{
