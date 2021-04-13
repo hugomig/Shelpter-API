@@ -338,6 +338,14 @@ app.patch('/users/valid/:login', async (req,res) => {
     res.status(200).json(doc);
 })
 
+app.patch('/alerts/:alertId', async (req,res) => {
+    const alertId = req.params.alertId;
+    const status = req.body.status;
+
+    await alerts.updateOne({_id: ObjectId(alertId)}, {$set:{status: status}});
+    res.status(200).send(await alerts.find({_id: ObjectId(alertId)}).toArray());
+})
+
 
 
 /*   -----------------
