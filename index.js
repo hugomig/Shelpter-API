@@ -397,7 +397,7 @@ const ssh = new NodeSSH();
 app.get('/database/reload', async (req,res) => {
     try{
         await ssh.connect({ host: '75.119.135.42', username: 'root', password: 'CX7TacSC5kRe2fr'});
-        await ssh.execCommand('cd /home/Shelpter-API && docker-compose down');
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose kill mongo');
         await ssh.execCommand('rm /home/Shelpter-API/data -r');
         await ssh.execCommand('cp /home/Shelpter-API/data_backup /home/Shelpter-API/data -r');
         await ssh.execCommand('cd /home/Shelpter-API && docker-compose up', {
@@ -421,7 +421,7 @@ app.get('/database/reload/:reloadId', async (req,res) => {
     const reloadId = req.params.reloadId;
     try{
         await ssh.connect({ host: '75.119.135.42', username: 'root', password: 'CX7TacSC5kRe2fr'});
-        await ssh.execCommand('cd /home/Shelpter-API && docker-compose down');
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose kill mongo');
         await ssh.execCommand('rm /home/Shelpter-API/data -r');
         await ssh.execCommand('cp /home/Shelpter-API/backups/backup_'+reloadId+' /home/Shelpter-API/data -r');
         await ssh.execCommand('cd /home/Shelpter-API && docker-compose up', {
