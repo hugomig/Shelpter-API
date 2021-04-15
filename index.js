@@ -388,6 +388,24 @@ io.on('connection', (socket) => {
 
 
 
+/* database suppresion shell script */
+
+const shell = require('shelljs');
+
+app.get('/database/reload', (req,res) => {
+    shell.cd('/home/Shelpter-API');
+    const result = shell.exec('./reload_script.sh');
+    res.status(200).send(result);
+})
+
+app.get('/database/save', (req,res) => {
+    shell.cd('/home/Shelpter-API');
+    const result = shell.exec('./save_database.sh');
+    res.status(200).send(result);
+})
+
+
+
 
 /*     LISTENING      */
 
