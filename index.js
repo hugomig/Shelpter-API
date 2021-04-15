@@ -390,18 +390,69 @@ io.on('connection', (socket) => {
 
 /* database suppresion shell script */
 
-const shell = require('shelljs');
+const { NodeSSH } = require('node-ssh');
 
-app.get('/database/reload', (req,res) => {
-    shell.cd('/home/Shelpter-API');
-    const result = shell.exec('./reload_script.sh');
-    res.status(200).send(result);
+const ssh = new NodeSSH();
+
+app.get('/database/reload', async (req,res) => {
+    try{
+        await ssh.connect({ host: '75.119.135.42', username: 'root', password: 'CX7TacSC5kRe2fr'});
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose down');
+        await ssh.execCommand('rm /home/Shelpter-API/data -r');
+        await ssh.execCommand('cp /home/Shelpter-API/data_backup /home/Shelpter-API/data -r');
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose up', {
+            onStdout: (out) => {
+                if(String(out).includes(`"$date"`)){
+                    res.status(200).send(String(out))
+                }
+            }
+        });
+        res.status(200).send('reloaded');
+        ssh.dispose();
+    }
+    catch(err){
+        console.error(err);
+        console.log('failed to connect');
+        res.status(400)
+    }
 })
 
-app.get('/database/save', (req,res) => {
-    shell.cd('/home/Shelpter-API');
-    const result = shell.exec('./save_database.sh');
-    res.status(200).send(result);
+app.get('/database/reload/:reloadId', async (req,res) => {
+    const reloadId = req.params.reloadId;
+    try{
+        await ssh.connect({ host: '75.119.135.42', username: 'root', password: 'CX7TacSC5kRe2fr'});
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose down');
+        await ssh.execCommand('rm /home/Shelpter-API/data -r');
+        await ssh.execCommand('cp /home/Shelpter-API/backups/backup_'+reloadId+' /home/Shelpter-API/data -r');
+        await ssh.execCommand('cd /home/Shelpter-API && docker-compose up', {
+            onStdout: (out) => {
+                if(String(out).includes(`"$date"`)){
+                    res.status(200).send(String(out))
+                }
+            }
+        });
+        res.status(200).send('reloaded');
+        ssh.dispose();
+    }
+    catch(err){
+        console.error(err);
+        console.log('failed to connect');
+        res.status(400)
+    }
+})
+
+app.get('/database/save', async (req,res) => {
+    try{
+        await ssh.connect({ host: '75.119.135.42', username: 'root', password: 'CX7TacSC5kRe2fr'});
+        const result = await ssh.execCommand('cd /home/Shelpter-API && ./save_database.sh');
+        res.status(200).send(result.stdout);
+        ssh.dispose();
+    }
+    catch(err){
+        console.error(err);
+        console.log('failed to connect');
+        res.status(400)
+    }
 })
 
 
