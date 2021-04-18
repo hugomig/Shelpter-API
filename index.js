@@ -20,6 +20,7 @@ let db;
 let user;
 let protect;
 let alerts;
+let helped;
 
 const Grid = require('gridfs-stream');
 let gfs;
@@ -30,6 +31,7 @@ MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     user = db.collection('user');
     protect = db.collection('protect');
     alerts = db.collection('alerts');
+    helped = db.collection('helped');
 
     gfs = Grid(db,mongo);
 });
@@ -345,6 +347,24 @@ app.patch('/alerts/:alertId', async (req,res) => {
     await alerts.updateOne({_id: ObjectId(alertId)}, {$set:{status: status}});
     res.status(200).send(await alerts.find({_id: ObjectId(alertId)}).toArray());
 })
+
+
+/*    Helped     */
+
+app.get('/helped/:login', async (req,res) => {
+    const login = req.params.login;
+    const docs = await helped.find({login: login}).toArray();
+    res.status(200).send(docs);
+})
+
+app.post('/helped', async (req,res) => {
+    const login = req.body.login;
+    const idAlerte = req.body.idAlerte;
+    await helped.insertOne({login: login, idAlerte: idAlerte});
+    res.status(200).send(await helped.find({login: login, idAlerte: idAlerte}).toArray())
+})
+
+
 
 
 
