@@ -21,6 +21,8 @@ let user;
 let protect;
 let alerts;
 let helped;
+let accept;
+let safezone;
 
 const Grid = require('gridfs-stream');
 let gfs;
@@ -32,6 +34,8 @@ MongoClient.connect(url,{ useUnifiedTopology: true }, (err,client) => {
     protect = db.collection('protect');
     alerts = db.collection('alerts');
     helped = db.collection('helped');
+    accept = db.collection('accept');
+    safezone = db.collection('safezone');
 
     gfs = Grid(db,mongo);
 });
@@ -364,6 +368,33 @@ app.post('/helped', async (req,res) => {
     res.status(200).send(await helped.find({login: login, idAlerte: idAlerte}).toArray())
 })
 
+/* Have accept help */
+
+app.get('/accept', async (req,res) => {
+    const docs = await accept.find({}).toArray();
+    res.status(200).send(docs)
+})
+
+app.post('/accept', async (req,res) => {
+    const login = req.body.login;
+    const idAlerte = req.body.idAlerte;
+    await accept.insertOne({login: login, idAlerte: idAlerte});
+    res.status(200).send(await accept.find({login: login, idAlerte: idAlerte}).toArray());
+})
+
+/* Safe zones */
+
+app.get('/safezone', async (req,res) => {
+    const docs = await safezone.find({}).toArray();
+    res.status(200).send(docs);
+})
+
+app.post('/safezone', async (req,res) => {
+    const latitude = req.body.latitude;
+    const longitude = req.body.longitude;
+    await safezone.insertOne({latitude: latitude, longitude: longitude});
+    res.status(200).send(await safezone.find({latitude: latitude, longitude: longitude}).toArray());
+})
 
 
 
